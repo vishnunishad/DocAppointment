@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard - MediCare</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- 1. SHARED THEME VARIABLES --- */
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #4338ca;
+            --secondary: #EC4899;
+            --background: #f3f4f6;
+            --surface: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            
+            /* Status Colors */
+            --status-pending-bg: #FEF3C7;
+            --status-pending-text: #D97706;
+            --status-confirmed-bg: #D1FAE5;
+            --status-confirmed-text: #059669;
+            --status-cancelled-bg: #FEE2E2;
+            --status-cancelled-text: #DC2626;
+        }
+
+        [data-theme="dark"] {
+            --background: #111827;
+            --surface: #1f2937;
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --border: #374151;
+            
+            /* Dark Mode Status Adjustments */
+            --status-pending-bg: rgba(245, 158, 11, 0.2);
+            --status-pending-text: #fbbf24;
+            --status-confirmed-bg: rgba(16, 185, 129, 0.2);
+            --status-confirmed-text: #34d399;
+            --status-cancelled-bg: rgba(239, 68, 68, 0.2);
+            --status-cancelled-text: #f87171;
+        }
+
+        /* --- 2. GLOBAL STYLES --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--background); color: var(--text-primary); transition: all 0.3s ease; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        
+        /* Header */
+        .header { background: var(--surface); padding: 1rem 0; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 100; }
+        .header-inner { display: flex; justify-content: space-between; align-items: center; }
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+        .header-controls { display: flex; align-items: center; gap: 15px; }
+        
+        /* Buttons */
+        .btn { padding: 0.5rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; cursor: pointer; border: none; transition: 0.2s; font-size: 0.9rem; }
+        .btn-outline { border: 1px solid var(--primary); color: var(--primary); background: transparent; }
+        .btn-outline:hover { background: var(--primary); color: white; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .theme-toggle { background: none; border: none; color: var(--text-primary); font-size: 1.2rem; cursor: pointer; }
+
+        /* --- 3. DASHBOARD SPECIFIC --- */
+        .dashboard-header {
+            display: flex; justify-content: space-between; align-items: end;
+            margin: 40px 0 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .dashboard-title h1 { font-size: 2rem; margin-bottom: 5px; }
+        .dashboard-title p { color: var(--text-secondary); }
+
+        /* Grid Layout */
+        .appointments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            padding-bottom: 50px;
+        }
+
+        /* Appointment Card */
+        .app-card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: transform 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .app-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        
+        .app-card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 4px;
+            background: var(--primary);
+        }
+
+        .doctor-info { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        
+        .doctor-avatar {
+            width: 50px; height: 50px;
+            background: #e0e7ff; color: var(--primary);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1.2rem;
+        }
+
+        .doctor-text h3 { font-size: 1.1rem; margin-bottom: 2px; }
+        .doctor-text span { font-size: 0.85rem; color: var(--secondary); font-weight: 500; }
+
+        .app-details {
+            display: flex; flex-direction: column; gap: 12px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--background);
+            border-radius: 8px;
+        }
+
+        .detail-row { display: flex; align-items: center; gap: 10px; color: var(--text-secondary); font-size: 0.95rem; }
+        .detail-row i { width: 20px; text-align: center; color: var(--primary); }
+
+        .app-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* --- 4. MODAL CSS (NEW) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none; align-items: center; justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: var(--surface);
+            color: var(--text-primary);
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%; max-width: 500px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: slideUp 0.3s ease;
+            border: 1px solid var(--border);
+        }
+
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .modal-row {
+            display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border);
+        }
+        .modal-row strong { color: var(--text-primary); }
+        .modal-row span { color: var(--text-secondary); }
+
+        /* Dark Mode Fixes */
+        [data-theme="dark"] .detail-row i { color: #818cf8; }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="container">
+            <div class="header-inner">
+                <a href="index.html" class="logo">
+                    <i class="fas fa-heart-pulse"></i> MediCare
+                </a>
+                
+                <div class="header-controls">
+                    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    
+                    <button onclick="handleLogout()" class="btn btn-outline" style="border-color: #ef4444; color: #ef4444;">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+       <div class="dashboard-header">
+    <div class="dashboard-title">
+        <h1>My Appointments</h1>
+        <p>Welcome back, <span id="user-name">Patient</span></p>
+    </div>
+    <div style="display:flex; gap:10px;">
+        <a href="patient-profile.html" class="btn btn-outline">My Profile</a>
+        <a href="doctors.html" class="btn btn-primary">+ New Appointment</a>
+    </div>
+    </div>
+
+        <div id="appointments-grid" class="appointments-grid">
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+                <i class="fas fa-spinner fa-spin fa-2x" style="color: var(--primary)"></i>
+                <p style="margin-top: 15px; color: var(--text-secondary);">Loading your schedule...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="details-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h2 style="font-size:1.5rem;">Appointment Details</h2>
+                <button onclick="closeModal()" style="background:none; border:none; font-size:1.5rem; color:var(--text-secondary); cursor:pointer;">&times;</button>
+            </div>
+            
+            <div id="modal-body">
+                </div>
+            
+            <button onclick="closeModal()" class="btn btn-primary btn-block" style="margin-top:1.5rem;">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000/api/appointments/';
+        const gridContainer = document.getElementById('appointments-grid');
+        let allAppointments = []; // Store appointments globally
+
+        // --- 1. THEME LOGIC ---
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+        const savedTheme = localStorage.getItem('theme') || 'light';
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            themeIcon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+        setTheme(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            setTheme(current === 'dark' ? 'light' : 'dark');
+        });
+
+        // --- 2. USER INFO ---
+        const userStr = localStorage.getItem('user');
+        if(userStr) {
+            const user = JSON.parse(userStr);
+            document.getElementById('user-name').textContent = user.first_name || user.username;
+        } else {
+            window.location.href = 'login.html';
+        }
+
+        // --- 3. FETCH APPOINTMENTS ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('access_token');
+            if (!token) window.location.href = 'login.html';
+
+            try {
+                const res = await fetch(API_URL, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!res.ok) throw new Error("Failed to fetch");
+                
+                allAppointments = await res.json(); // Save to global variable
+                renderAppointments(allAppointments);
+
+            } catch (err) {
+                console.error(err);
+                gridContainer.innerHTML = `<p style="text-align:center; grid-column:1/-1;">Error loading appointments.</p>`;
+            }
+        });
+
+        function renderAppointments(apps) {
+            gridContainer.innerHTML = '';
+            
+            if (apps.length === 0) {
+                gridContainer.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 60px; background: var(--surface); border-radius: 16px; border: 1px dashed var(--border);">
+                        <i class="fas fa-calendar-plus fa-3x" style="color: var(--text-secondary); opacity: 0.5;"></i>
+                        <h3 style="margin: 15px 0;">No Appointments Yet</h3>
+                        <a href="doctors.html" class="btn btn-primary">Find a Doctor</a>
+                    </div>`;
+                return;
+            }
+
+            apps.forEach(app => {
+                const dateObj = new Date(app.date);
+                const dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+                
+                const docFirst = app.doctor_details?.first_name || 'Unknown';
+                const docLast = app.doctor_details?.last_name || 'Doctor';
+                const docSpec = app.doctor_details?.specialization || 'Specialist';
+                
+                // Status Logic
+                let statusColor = 'var(--status-pending-text)';
+                let statusBg = 'var(--status-pending-bg)';
+                let statusIcon = 'fa-clock';
+
+                if(app.status === 'confirmed') {
+                    statusColor = 'var(--status-confirmed-text)';
+                    statusBg = 'var(--status-confirmed-bg)';
+                    statusIcon = 'fa-check-circle';
+                }
+
+                const card = `
+                    <div class="app-card">
+                        <div class="doctor-info">
+                            <div class="doctor-avatar">${docFirst[0]}${docLast[0]}</div>
+                            <div class="doctor-text">
+                                <h3>Dr. ${docFirst} ${docLast}</h3>
+                                <span>${docSpec}</span>
+                            </div>
+                        </div>
+
+                        <div class="app-details">
+                            <div class="detail-row"><i class="far fa-calendar-alt"></i> <span>${dateStr}</span></div>
+                            <div class="detail-row"><i class="far fa-clock"></i> <span>${app.time}</span></div>
+                            <div class="detail-row"><i class="fas fa-dollar-sign"></i> <span>$${app.consultation_fee} Fee</span></div>
+                        </div>
+
+                        <div class="app-footer">
+                            <div class="status-badge" style="background:${statusBg}; color:${statusColor}">
+                                <i class="fas ${statusIcon}"></i> ${app.status}
+                            </div>
+                            <button onclick="openDetails(${app.id})" class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.8rem;">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                `;
+                gridContainer.innerHTML += card;
+            });
+        }
+
+        // --- 4. DETAILS MODAL LOGIC (NEW) ---
+        const modal = document.getElementById('details-modal');
+        const modalBody = document.getElementById('modal-body');
+
+        function openDetails(id) {
+            // Find the correct appointment from the global list
+            const app = allAppointments.find(a => a.id === id);
+            
+            if(!app) return;
+
+            const dateObj = new Date(app.date);
+            const dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+            modalBody.innerHTML = `
+                <div class="modal-row"><span>Status</span> <strong style="text-transform:capitalize">${app.status}</strong></div>
+                <div class="modal-row"><span>Doctor</span> <strong>Dr. ${app.doctor_details?.first_name} ${app.doctor_details?.last_name}</strong></div>
+                <div class="modal-row"><span>Specialization</span> <strong>${app.doctor_details?.specialization}</strong></div>
+                <div class="modal-row"><span>Date</span> <strong>${dateStr}</strong></div>
+                <div class="modal-row"><span>Time</span> <strong>${app.time}</strong></div>
+                <div class="modal-row"><span>Consultation Fee</span> <strong>$${app.consultation_fee}</strong></div>
+                <div style="margin-top:1rem;">
+                    <span style="color:var(--text-secondary); font-size:0.9rem;">Your Notes:</span>
+                    <p style="background:var(--background); padding:10px; border-radius:6px; margin-top:5px; border:1px solid var(--border);">
+                        ${app.notes || 'No notes provided.'}
+                    </p>
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function(e) {
+            if (e.target == modal) closeModal();
+        }
+
+        function handleLogout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

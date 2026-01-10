@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Login to MediCare - Doctor Appointment Booking System">
+  <title>Login - MediCare</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('/static/css/login.css');
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+    <i class="fas fa-moon"></i>
+  </button>
+
+  <a href="index.html" class="back-btn">
+    <i class="fas fa-arrow-left"></i>
+    Back to Home
+  </a>
+
+  <div class="container">
+    <div class="login-card">
+      <div class="card-header">
+        <div class="logo">
+          <div class="logo-icon">
+            <i class="fas fa-heart-pulse"></i>
+          </div>
+          <span class="logo-text">MediCare</span>
+        </div>
+        <h1 class="welcome-title">Welcome Back</h1>
+        <p class="welcome-subtitle">Sign in to access your healthcare dashboard</p>
+      </div>
+
+      <div class="card-body">
+        <div class="role-tabs" id="role-tabs">
+          <button type="button" class="role-tab active" data-role="patient" onclick="selectRole('patient')">
+            <i class="fas fa-user-injured"></i> Patient
+          </button>
+          <button type="button" class="role-tab" data-role="doctor" onclick="selectRole('doctor')">
+            <i class="fas fa-user-md"></i> Doctor
+          </button>
+          <button type="button" class="role-tab" data-role="admin" onclick="selectRole('admin')">
+            <i class="fas fa-user-shield"></i> Admin
+          </button>
+        </div>
+
+        <div class="demo-section">
+          <div class="demo-title">
+            <i class="fas fa-key"></i> Quick Login (Demo Credentials)
+          </div>
+          <div class="demo-credentials">
+            <div class="demo-credential" onclick="fillDemoCredentials('patient')">
+              <div class="demo-role" style="background: linear-gradient(135deg, #4F46E5, #6366f1);">
+                <i class="fas fa-user-injured"></i>
+              </div>
+              <div class="demo-info">
+                <span class="demo-role-name">Patient Account</span>
+                <span class="demo-details">john.smith@email.com</span>
+              </div>
+              <i class="fas fa-chevron-right" style="color: #6b7280;"></i>
+            </div>
+            
+            <div class="demo-credential" onclick="fillDemoCredentials('doctor')">
+              <div class="demo-role" style="background: linear-gradient(135deg, #10B981, #059669);">
+                <i class="fas fa-user-md"></i>
+              </div>
+              <div class="demo-info">
+                <span class="demo-role-name">Doctor Account</span>
+                <span class="demo-details">sarah.johnson@medicare.com</span>
+              </div>
+              <i class="fas fa-chevron-right" style="color: #6b7280;"></i>
+            </div>
+            
+            <div class="demo-credential" onclick="fillDemoCredentials('admin')">
+              <div class="demo-role" style="background: linear-gradient(135deg, #F59E0B, #D97706);">
+                <i class="fas fa-user-shield"></i>
+              </div>
+              <div class="demo-info">
+                <span class="demo-role-name">Admin Account</span>
+                <span class="demo-details">admin@medicare.com</span>
+              </div>
+              <i class="fas fa-chevron-right" style="color: #6b7280;"></i>
+            </div>
+          </div>
+        </div>
+
+        <form id="login-form" onsubmit="return handleLogin(event)">
+          <div class="form-group">
+            <label class="form-label" for="username">Username or Email</label>
+            <input type="text" id="username" class="form-input" placeholder="Enter username or email" required>
+            <small class="form-hint">Use your registered Email Address</small>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <div class="password-container">
+              <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
+              <button type="button" class="password-toggle" onclick="togglePassword()">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+          
+          <button type="submit" class="btn btn-primary" id="submitBtn">
+            <span id="submit-text">Sign In</span>
+            <span id="submit-spinner" class="hidden">
+              <i class="fas fa-spinner fa-spin"></i> Signing in...
+            </span>
+          </button>
+        </form>
+
+        <div class="auth-links">
+          <a href="register.html" class="auth-link">
+            <i class="fas fa-user-plus"></i> Create new account
+          </a>
+            <a href="forgot-password.html" class="auth-link">
+              <i class="fas fa-key"></i> Forgot password?
+            </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <script>
+    // --- 1. THEME MANAGEMENT ---
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = themeToggle.querySelector('i');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const savedTheme = localStorage.getItem('theme');
+    
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+      themeIcon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+    
+    if (savedTheme) setTheme(savedTheme);
+    else if (prefersDark.matches) setTheme('dark');
+    else setTheme('light');
+    
+    themeToggle.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      setTheme(current === 'dark' ? 'light' : 'dark');
+    });
+
+    // --- 2. CONFIG & UI LOGIC ---
+    let selectedRole = 'patient'; // Default role
+    
+    function selectRole(role) {
+      selectedRole = role; // Updates the variable used for checking later
+      document.querySelectorAll('.role-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.role === role);
+      });
+      document.getElementById('submit-text').textContent = `Sign In as ${role.charAt(0).toUpperCase() + role.slice(1)}`;
+    }
+    
+    function fillDemoCredentials(role) {
+      selectRole(role);
+      
+      const creds = {
+        patient: { u: 'john.smith@email.com', p: 'Patient@123' },
+        doctor: { u: 'sarah.johnson@medicare.com', p: 'Doctor@123' },
+        admin: { u: 'admin@medicare.com', p: 'Admin@123' }
+      };
+      
+      if(creds[role]) {
+          document.getElementById('username').value = creds[role].u;
+          document.getElementById('password').value = creds[role].p;
+          showToast('Credentials Loaded', `Demo ${role} credentials filled.`, 'success');
+      }
+    }
+    
+    function togglePassword() {
+      const inp = document.getElementById('password');
+      const icon = document.querySelector('.password-toggle i');
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+      } else {
+        inp.type = 'password';
+        icon.className = 'fas fa-eye';
+      }
+    }
+    
+    function showToast(title, message, type = 'success') {
+      const container = document.getElementById('toast-container') || document.body.appendChild(Object.assign(document.createElement('div'), {id:'toast-container'}));
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `<div class="toast-header"><div class="toast-title">${title}</div></div><div class="toast-message">${message}</div>`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    // --- 3. REAL BACKEND LOGIN LOGIC ---
+    const API_LOGIN = 'http://127.0.0.1:8000/api/auth/login/';
+    const API_PROFILE = 'http://127.0.0.1:8000/api/users/profile/';
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      
+      const emailVal = document.getElementById('username').value;
+      const passVal = document.getElementById('password').value;
+      const submitBtn = document.getElementById('submitBtn');
+      const submitText = document.getElementById('submit-text');
+      const submitSpinner = document.getElementById('submit-spinner');
+      
+      // UI Loading
+      submitBtn.disabled = true;
+      submitBtn.classList.add('btn-loading');
+      submitText.classList.add('hidden');
+      submitSpinner.classList.remove('hidden');
+
+      try {
+        // Step 1: Get Token
+        const res = await fetch(API_LOGIN, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: emailVal, password: passVal })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            // Step 2: Get User Profile to check Role
+            const profileRes = await fetch(API_PROFILE, {
+                headers: { 'Authorization': `Bearer ${data.access}` }
+            });
+
+            if (profileRes.ok) {
+                const user = await profileRes.json();
+                
+                // --- FIX: Check if the Database Role matches the Selected Tab ---
+                if (user.role !== selectedRole) {
+                    showToast('Role Mismatch', `This account belongs to a ${user.role}, but you are trying to login as a ${selectedRole}. Please switch tabs.`, 'error');
+                    resetBtn();
+                    return; // Stop here, do not save tokens or redirect
+                }
+
+                // If Roles Match, proceed with Login
+                localStorage.setItem('access_token', data.access);
+                localStorage.setItem('refresh_token', data.refresh);
+                localStorage.setItem('user', JSON.stringify(user)); 
+                
+                showToast('Success', `Welcome back, ${user.first_name}!`, 'success');
+                
+                setTimeout(() => {
+                    if (user.role === 'admin') window.location.href = 'admin-dashboard.html';
+                    else if (user.role === 'doctor') window.location.href = 'doctor-dashboard.html';
+                    else window.location.href = 'patient-appointments.html';
+                }, 1000);
+
+            } else {
+                throw new Error("Could not fetch user profile.");
+            }
+
+        } else {
+            showToast('Login Failed', 'Invalid email or password.', 'error');
+            resetBtn();
+        }
+
+      } catch (err) {
+        console.error(err);
+        showToast('System Error', 'Could not connect to server. Is Backend running?', 'error');
+        resetBtn();
+      }
+
+      function resetBtn() {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('btn-loading');
+        submitText.classList.remove('hidden');
+        submitSpinner.classList.add('hidden');
+      }
+    }
+    
+    // Auto-focus
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('username').focus();
+    });
+  </script>
+</body>
+</html>

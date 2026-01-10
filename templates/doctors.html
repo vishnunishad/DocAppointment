@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Doctors - MediCare</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- 1. CRITICAL COLOR VARIABLES (Fixed for Visibility) --- */
+        :root {
+            /* Light Mode Default */
+            --primary: #4F46E5;
+            --primary-dark: #4338ca;
+            --secondary: #EC4899;
+            --background: #f3f4f6;       /* Light Grey Background */
+            --surface: #ffffff;          /* Pure White Cards */
+            --text-primary: #111827;     /* Dark Black Text */
+            --text-secondary: #6b7280;   /* Grey Text */
+            --border: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            /* Dark Mode Overrides */
+            --background: #111827;       
+            --surface: #1f2937;          
+            --text-primary: #f9fafb;     
+            --text-secondary: #d1d5db;   
+            --border: #374151;
+        }
+        /* --- FIX: Invert Calendar/Clock Icons in Dark Mode --- */
+        [data-theme="dark"] ::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        /* --- 2. HEADER & LAYOUT --- */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+        .header {
+            background: var(--surface);
+            padding: 1rem 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-inner { display: flex; justify-content: space-between; align-items: center; }
+
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+        
+        .header-controls { display: flex; align-items: center; gap: 15px; }
+
+        .btn { padding: 0.5rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; cursor: pointer; border: none; transition: 0.2s; }
+        .btn-outline { border: 1px solid var(--primary); color: var(--primary); background: transparent; }
+        .btn-outline:hover { background: var(--primary); color: white; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-block { width: 100%; display: block; text-align: center; }
+
+        .theme-toggle { background: var(--surface); color: var(--text-primary); font-size: 1.2rem; cursor: pointer; border: none; padding: 0.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+        /* --- 3. DOCTOR CARDS --- */
+        .page-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 80px 0;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .doctors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding-bottom: 4rem;
+        }
+
+        .doctor-card {
+            background: var(--surface);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .doctor-card:hover { transform: translateY(-5px); }
+
+        .doctor-header { padding: 2rem; text-align: center; border-bottom: 1px solid var(--border); }
+
+        .doctor-avatar {
+            width: 80px; height: 80px;
+            background: #e0e7ff; color: var(--primary);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; font-weight: 700;
+            margin: 0 auto 1rem;
+        }
+
+        .doctor-body { padding: 1.5rem; }
+
+        .doctor-info-row {
+            display: flex; justify-content: space-between;
+            margin-bottom: 0.8rem;
+            font-size: 0.9rem;
+            color: var(--text-primary); /* Ensures visibility */
+        }
+        
+        .doctor-name { color: var(--text-primary); margin-bottom: 5px; }
+        .doctor-spec { color: var(--secondary); font-weight: 500; font-size: 0.9rem; }
+
+        /* --- 4. MODAL (FIXED) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.6); /* Semi-transparent black overlay */
+            display: none; align-items: center; justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: var(--surface); /* Solid background matching theme */
+            color: var(--text-primary);
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%; max-width: 450px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 500; }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--background); /* Matches theme input bg */
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+        
+        .form-input:focus { outline: 2px solid var(--primary); border-color: transparent; }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="container">
+            <div class="header-inner">
+                <a href="index.html" class="logo">
+                    <i class="fas fa-heart-pulse"></i> MediCare
+                </a>
+                
+                <div class="header-controls">
+                    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <a href="index.html" class="btn btn-outline">Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-header">
+        <div class="container">
+            <h1>Find Your Specialist</h1>
+            <p>Book appointments with top-rated doctors</p>
+        </div>
+    </section>
+
+    <section class="container">
+        <div id="doctors-container" class="doctors-grid">
+            <div style="text-align: center; grid-column: 1/-1; padding: 3rem;">
+                <i class="fas fa-spinner fa-spin fa-2x" style="color: var(--primary)"></i>
+                <p>Loading Doctors...</p>
+            </div>
+        </div>
+    </section>
+
+    <div id="booking-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 1rem;">Book Appointment</h2>
+            <div id="modal-doctor-info" style="margin-bottom: 1.5rem; padding: 1rem; background: var(--background); border-radius: 8px; font-size: 0.9rem;"></div>
+            
+            <form id="booking-form">
+                <input type="hidden" id="doctor-id">
+                <input type="hidden" id="consultation-fee">
+                
+                <div class="form-group">
+                    <label>Select Date</label>
+                    <input type="date" id="book-date" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Select Time</label>
+                    <input type="time" id="book-time" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Reason</label>
+                    <textarea id="book-notes" class="form-input" rows="2" placeholder="Describe symptoms..."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 1.5rem;">
+                    <button type="button" onclick="closeModal()" class="btn btn-outline" style="flex: 1;">Cancel</button>
+                    <button type="submit" id="confirm-btn" class="btn btn-primary" style="flex: 1;">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:8000/api';
+        const doctorsContainer = document.getElementById('doctors-container');
+        
+        // --- 1. THEME LOGIC (Fixed) ---
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+        const savedTheme = localStorage.getItem('theme');
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            themeIcon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        // Default to Light Mode if nothing saved
+        if (savedTheme) setTheme(savedTheme);
+        else setTheme('light');
+
+        themeToggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            setTheme(current === 'dark' ? 'light' : 'dark');
+        });
+
+        // --- 2. LOAD DOCTORS ---
+        document.addEventListener('DOMContentLoaded', loadDoctors);
+
+        async function loadDoctors() {
+            try {
+                const response = await fetch(`${API_BASE}/users/doctors/`);
+                if (!response.ok) throw new Error('Failed to load');
+                
+                const doctors = await response.json();
+                doctorsContainer.innerHTML = ''; 
+
+                if (doctors.length === 0) {
+                    doctorsContainer.innerHTML = '<p style="text-align: center; grid-column: 1/-1;">No doctors found.</p>';
+                    return;
+                }
+
+                doctors.forEach(doc => {
+                    const initials = (doc.first_name[0] || 'D') + (doc.last_name[0] || 'R');
+                    
+                    const card = `
+                        <div class="doctor-card">
+                            <div class="doctor-header">
+                                <div class="doctor-avatar">${initials}</div>
+                                <h3 class="doctor-name">Dr. ${doc.first_name} ${doc.last_name}</h3>
+                                <p class="doctor-spec">${doc.specialization}</p>
+                            </div>
+                            <div class="doctor-body">
+                                <div class="doctor-info-row">
+                                    <span>Rating</span>
+                                    <strong><i class="fas fa-star" style="color: #fbbf24;"></i> ${doc.rating}/5</strong>
+                                </div>
+                                <div class="doctor-info-row">
+                                    <span>Experience</span>
+                                    <strong>${doc.experience} Years</strong>
+                                </div>
+                                <div class="doctor-info-row">
+                                    <span>Fee</span>
+                                    <strong>$${doc.consultation_fee}</strong>
+                                </div>
+                                <button onclick="openModal('${doc.id}', '${doc.first_name}', '${doc.last_name}', '${doc.consultation_fee}')" 
+                                        class="btn btn-primary btn-block" style="margin-top: 1rem;">
+                                    Book Appointment
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    doctorsContainer.innerHTML += card;
+                });
+
+            } catch (error) {
+                console.error(error);
+                doctorsContainer.innerHTML = '<p style="color: red; text-align: center; grid-column: 1/-1;">Server Error. Is Backend running?</p>';
+            }
+        }
+
+        // --- 3. MODAL LOGIC ---
+        const modal = document.getElementById('booking-modal');
+        const docIdInput = document.getElementById('doctor-id');
+        const feeInput = document.getElementById('consultation-fee');
+        const modalInfo = document.getElementById('modal-doctor-info');
+
+        function openModal(id, fname, lname, fee) {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                alert("Please Login to book!");
+                window.location.href = 'login.html';
+                return;
+            }
+            docIdInput.value = id;
+            feeInput.value = fee;
+            modalInfo.innerHTML = `<strong>Dr. ${fname} ${lname}</strong><br>Consultation Fee: $${fee}`;
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function(e) {
+            if (e.target == modal) closeModal();
+        }
+
+        // --- 4. SUBMIT BOOKING ---
+        document.getElementById('booking-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('confirm-btn');
+            const originalText = btn.innerText;
+            btn.innerText = 'Processing...';
+            btn.disabled = true;
+
+            const token = localStorage.getItem('access_token');
+            
+            try {
+                const response = await fetch(`${API_BASE}/appointments/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        doctor: docIdInput.value,
+                        date: document.getElementById('book-date').value,
+                        time: document.getElementById('book-time').value,
+                        notes: document.getElementById('book-notes').value,
+                        consultation_fee: feeInput.value
+                    })
+                });
+
+                if (response.ok) {
+                    alert("✅ Appointment Booked!");
+                    window.location.href = 'patient-appointments.html';
+                } else {
+                    const data = await response.json();
+                    alert("❌ Failed: " + JSON.stringify(data));
+                }
+            } catch (err) {
+                alert("⚠️ Network Error");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
