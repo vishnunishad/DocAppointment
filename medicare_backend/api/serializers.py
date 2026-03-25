@@ -1,60 +1,26 @@
 from rest_framework import serializers
+from .models import Appointment
 from django.contrib.auth import get_user_model
-from .models import Appointment, PatientProfile
 
-User = get_user_model() 
+# --- CRITICAL CHANGE ---
+# We import the serializers from 'accounts' because that is where 
+# we defined the logic to include the Medical Profile.
+from accounts.serializers import UserSerializer, UserDetailSerializer
 
-# --- 1. Patient Profile Serializer ---
-class PatientProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PatientProfile
-        fields = ['date_of_birth', 'blood_group', 'address', 'allergies', 'medical_history']
+User = get_user_model()
 
-# --- 2. User Serializer (Read-Only for displaying user info) ---
-class UserSerializer(serializers.ModelSerializer):
-    profile = PatientProfileSerializer(read_only=True)
-
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 
-                  'specialization', 'experience', 'consultation_fee', 'rating', 
-                  'is_verified', 'profile']
-
-# --- 3. Register Serializer (For creating new users) ---
-class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-
-    class Meta:
-        model = User
-        fields = ['email', 'password', 'first_name', 'last_name', 'role', 
-                  'specialization', 'experience', 'consultation_fee']
-        extra_kwargs = {
-            'first_name': {'required': True},
-            'last_name': {'required': True},
-            'email': {'required': True}
-        }
-
-    def create(self, validated_data):
-        user = User.objects.create_user(
-            username=validated_data['email'], 
-            email=validated_data['email'],
-            password=validated_data['password'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name'],
-            role=validated_data.get('role', 'patient'),
-            specialization=validated_data.get('specialization', ''),
-            experience=validated_data.get('experience', 0),
-            consultation_fee=validated_data.get('consultation_fee', 0.0)
-        )
-        return user
-
-# --- 4. Appointment Serializer ---
 class AppointmentSerializer(serializers.ModelSerializer):
-    patient_details = UserSerializer(source='patient', read_only=True)
+    # 1. Doctor Details: Uses basic info (Name, Spec)
     doctor_details = UserSerializer(source='doctor', read_only=True)
-
+    
+    # 2. Patient Details: Uses UserDetailSerializer 
+    # This serializer INCLUDES the 'profile' (Medical History, Allergies)
+    patient_details = UserDetailSerializer(source='patient', read_only=True)
+    
     class Meta:
         model = Appointment
-        fields = ['id', 'patient', 'patient_details', 'doctor', 'doctor_details', 
-                  'date', 'time', 'status', 'notes', 'consultation_fee', 'created_at']
-        read_only_fields = ['patient', 'created_at']
+        fields = ['id', 'patient', 'doctor', 'date', 'time', 'notes', 
+                  'status', 'consultation_fee', 'doctor_details', 'patient_details']
+        extra_kwargs = {
+            'patient': {'read_only': True}
+        }

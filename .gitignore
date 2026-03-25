@@ -3,3 +3,8 @@ medicare_backend/venv/
 __pycache__/
 *.pyc
 db.sqlite3
+.env
+*.env
+!.env.example
+medicare_backend/.env
+medicare_backend/media/

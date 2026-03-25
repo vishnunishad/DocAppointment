@@ -35,7 +35,7 @@
           <span class="logo-text">MediCare</span>
         </div>
         <h1 class="welcome-title">Welcome Back</h1>
-        <p class="welcome-subtitle">Sign in to access your healthcare dashboard</p>
+        <p class="welcome-subtitle">Sign In to access your healthcare dashboard</p>
       </div>
 
       <div class="card-body">
@@ -62,7 +62,7 @@
               </div>
               <div class="demo-info">
                 <span class="demo-role-name">Patient Account</span>
-                <span class="demo-details">john.smith@email.com</span>
+                <span class="demo-details">patient1@gmail.com</span>
               </div>
               <i class="fas fa-chevron-right" style="color: #6b7280;"></i>
             </div>
@@ -73,29 +73,19 @@
               </div>
               <div class="demo-info">
                 <span class="demo-role-name">Doctor Account</span>
-                <span class="demo-details">sarah.johnson@medicare.com</span>
+                <span class="demo-details">doctor1@gmail.com</span>
               </div>
               <i class="fas fa-chevron-right" style="color: #6b7280;"></i>
             </div>
             
-            <div class="demo-credential" onclick="fillDemoCredentials('admin')">
-              <div class="demo-role" style="background: linear-gradient(135deg, #F59E0B, #D97706);">
-                <i class="fas fa-user-shield"></i>
-              </div>
-              <div class="demo-info">
-                <span class="demo-role-name">Admin Account</span>
-                <span class="demo-details">admin@medicare.com</span>
-              </div>
-              <i class="fas fa-chevron-right" style="color: #6b7280;"></i>
-            </div>
           </div>
         </div>
 
         <form id="login-form" onsubmit="return handleLogin(event)">
           <div class="form-group">
-            <label class="form-label" for="username">Username or Email</label>
-            <input type="text" id="username" class="form-input" placeholder="Enter username or email" required>
-            <small class="form-hint">Use your registered Email Address</small>
+            <label class="form-label" for="username">Email Address</label>
+            <input type="text" id="username" class="form-input" placeholder="Enter your email" required>
+            <small class="form-hint">Use your registered email address</small>
           </div>
           
           <div class="form-group">
@@ -130,6 +120,7 @@
 
   <div class="toast-container" id="toast-container"></div>
 
+  <script src="/static/js/app-config.js"></script>
   <script>
     // --- 1. THEME MANAGEMENT ---
     const themeToggle = document.getElementById('themeToggle');
@@ -156,26 +147,26 @@
     let selectedRole = 'patient'; // Default role
     
     function selectRole(role) {
-      selectedRole = role; // Updates the variable used for checking later
+      selectedRole = role;
       document.querySelectorAll('.role-tab').forEach(tab => {
         tab.classList.toggle('active', tab.dataset.role === role);
       });
       document.getElementById('submit-text').textContent = `Sign In as ${role.charAt(0).toUpperCase() + role.slice(1)}`;
     }
     
-    function fillDemoCredentials(role) {
+   function fillDemoCredentials(role) {
       selectRole(role);
       
       const creds = {
-        patient: { u: 'john.smith@email.com', p: 'Patient@123' },
-        doctor: { u: 'sarah.johnson@medicare.com', p: 'Doctor@123' },
-        admin: { u: 'admin@medicare.com', p: 'Admin@123' }
+        patient: { u: 'patient1@gmail.com' },
+        doctor: { u: 'doctor1@gmail.com' }
       };
       
       if(creds[role]) {
           document.getElementById('username').value = creds[role].u;
-          document.getElementById('password').value = creds[role].p;
-          showToast('Credentials Loaded', `Demo ${role} credentials filled.`, 'success');
+          document.getElementById('password').value = '';
+          showToast('Demo Email Loaded', `Demo ${role} email filled. Enter password to continue.`, 'success');
+          
       }
     }
     
@@ -201,8 +192,7 @@
     }
 
     // --- 3. REAL BACKEND LOGIN LOGIC ---
-    const API_LOGIN = 'http://127.0.0.1:8000/api/auth/login/';
-    const API_PROFILE = 'http://127.0.0.1:8000/api/users/profile/';
+    const API_LOGIN = `${window.APP_CONFIG.API_BASE_URL}/api/auth/login/`;
 
     async function handleLogin(e) {
       e.preventDefault();
@@ -220,49 +210,43 @@
       submitSpinner.classList.remove('hidden');
 
       try {
-        // Step 1: Get Token
+        // Step 1: Login & Get Data
         const res = await fetch(API_LOGIN, {
             method: 'POST',
+          credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: emailVal, password: passVal })
+            // SENDING 'email' key correctly now!
+            body: JSON.stringify({ email: emailVal, password: passVal })
         });
 
         const data = await res.json();
 
         if (res.ok) {
-            // Step 2: Get User Profile to check Role
-            const profileRes = await fetch(API_PROFILE, {
-                headers: { 'Authorization': `Bearer ${data.access}` }
-            });
+            // SUCCESS: Backend returns { access, refresh, user: {...} }
+            const user = data.user; 
 
-            if (profileRes.ok) {
-                const user = await profileRes.json();
-                
-                // --- FIX: Check if the Database Role matches the Selected Tab ---
-                if (user.role !== selectedRole) {
-                    showToast('Role Mismatch', `This account belongs to a ${user.role}, but you are trying to login as a ${selectedRole}. Please switch tabs.`, 'error');
-                    resetBtn();
-                    return; // Stop here, do not save tokens or redirect
-                }
-
-                // If Roles Match, proceed with Login
-                localStorage.setItem('access_token', data.access);
-                localStorage.setItem('refresh_token', data.refresh);
-                localStorage.setItem('user', JSON.stringify(user)); 
-                
-                showToast('Success', `Welcome back, ${user.first_name}!`, 'success');
-                
-                setTimeout(() => {
-                    if (user.role === 'admin') window.location.href = 'admin-dashboard.html';
-                    else if (user.role === 'doctor') window.location.href = 'doctor-dashboard.html';
-                    else window.location.href = 'patient-appointments.html';
-                }, 1000);
-
-            } else {
-                throw new Error("Could not fetch user profile.");
+            // Role Check
+            if (user.role !== selectedRole) {
+                showToast('Role Mismatch', `This account belongs to a ${user.role}, but you are trying to login as a ${selectedRole}. Please switch tabs.`, 'error');
+                resetBtn();
+                return;
             }
 
+            // Save Credentials
+            sessionStorage.setItem('user', JSON.stringify(user));
+
+            showToast('Success', `Welcome back, ${user.first_name}!`, 'success');
+            
+            // Redirect based on role
+            setTimeout(() => {
+                if (user.role === 'admin') window.location.href = 'admin-dashboard.html';
+                else if (user.role === 'doctor') window.location.href = 'doctor-dashboard.html';
+                else window.location.href = 'patient-appointments.html';
+            }, 1000);
+
         } else {
+            // FAILED
+            console.error("Login failed:", data);
             showToast('Login Failed', 'Invalid email or password.', 'error');
             resetBtn();
         }

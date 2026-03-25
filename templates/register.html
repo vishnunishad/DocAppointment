@@ -41,7 +41,7 @@
 
       <div class="card-body">
         <div class="registration-type">
-          <div class="type-card active" onclick="selectType('patient')">
+          <div class="type-card active" onclick="selectType('patient', this)">
             <div class="type-icon">
               <i class="fas fa-user-injured"></i>
             </div>
@@ -49,7 +49,7 @@
             <div class="type-description">Book appointments, track health records</div>
           </div>
           
-          <div class="type-card" onclick="selectType('doctor')">
+          <div class="type-card" onclick="selectType('doctor', this)">
             <div class="type-icon">
               <i class="fas fa-user-md"></i>
             </div>
@@ -75,6 +75,20 @@
             <label class="form-label" for="email">Email Address</label>
             <input type="email" id="email" class="form-input" placeholder="john.doe@example.com" required>
             <small class="form-hint">We'll never share your email with anyone else.</small>
+
+            <div class="otp-actions">
+              <button type="button" class="btn btn-otp" id="send-otp-btn" onclick="sendOTP()">Send OTP</button>
+              <small id="otp-timer" class="form-hint hidden"></small>
+            </div>
+
+            <div id="otp-verification-box" class="hidden otp-box">
+              <label class="form-label" for="otp-code">Email OTP</label>
+              <div class="otp-input-row">
+                <input type="text" id="otp-code" class="form-input" placeholder="Enter 6-digit OTP" maxlength="6" inputmode="numeric">
+                <button type="button" class="btn btn-otp" id="verify-otp-btn" onclick="verifyOTP()">Verify OTP</button>
+              </div>
+              <small id="otp-status" class="form-hint"></small>
+            </div>
           </div>
           
           <div class="form-group">
@@ -131,7 +145,7 @@
           <div class="form-checkbox">
             <input type="checkbox" id="terms" class="checkbox-input" required>
             <label for="terms" class="checkbox-label">
-              I agree to the <a href="#" onclick="showTerms()">Terms of Service</a> and <a href="#" onclick="showPrivacy()">Privacy Policy</a>
+              I agree to the <a href="#" onclick="showTerms(); return false;">Terms of Service</a> and <a href="#" onclick="showPrivacy(); return false;">Privacy Policy</a>
             </label>
           </div>
           
@@ -151,7 +165,7 @@
         </form>
 
         <div class="auth-links">
-          Already have an account? <a href="login.html" class="auth-link">Sign in here</a>
+          Already have an account? <a href="login.html" class="auth-link">Sign In here</a>
         </div>
       </div>
     </div>
@@ -159,8 +173,9 @@
 
   <div class="toast-container" id="toast-container"></div>
 
+  <script src="/static/js/app-config.js"></script>
   <script>
-    // --- 1. THEME MANAGEMENT (Existing Code) ---
+    // --- 1. THEME MANAGEMENT ---
     const themeToggle = document.getElementById('themeToggle');
     const themeIcon = themeToggle.querySelector('i');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
@@ -190,13 +205,13 @@
     // --- 2. REGISTRATION TYPE LOGIC ---
     let selectedType = 'patient';
     
-    function selectType(type) {
+    function selectType(type, selectedCard) {
       selectedType = type;
       
       document.querySelectorAll('.type-card').forEach(card => {
         card.classList.remove('active');
       });
-      event.currentTarget.classList.add('active');
+      if (selectedCard) selectedCard.classList.add('active');
       
       const doctorFields = document.getElementById('doctor-fields');
       const expInput = document.getElementById('experience');
@@ -284,8 +299,161 @@
       setTimeout(() => toast.remove(), 5000);
     }
     
-    // --- 6. REAL BACKEND REGISTRATION LOGIC ---
-    const API_URL = 'http://127.0.0.1:8000/api/users/';
+    // --- 6. REGISTRATION LOGIC ---
+    const API_URL = `${window.APP_CONFIG.API_BASE_URL}/api/users/`;
+    const OTP_SEND_URL = `${window.APP_CONFIG.API_BASE_URL}/api/otp/send/`;
+    const OTP_VERIFY_URL = `${window.APP_CONFIG.API_BASE_URL}/api/otp/verify/`;
+
+    let otpVerified = false;
+    let verifiedEmail = '';
+    let otpCooldownInterval = null;
+
+    function resetOTPState() {
+      otpVerified = false;
+      verifiedEmail = '';
+      document.getElementById('otp-code').value = '';
+      document.getElementById('otp-verification-box').classList.add('hidden');
+      document.getElementById('otp-status').textContent = '';
+      document.getElementById('otp-status').style.color = '';
+      document.getElementById('verify-otp-btn').disabled = false;
+      document.getElementById('otp-code').disabled = false;
+    }
+
+    function updateOTPStatus(message, type = 'default') {
+      const status = document.getElementById('otp-status');
+      status.textContent = message;
+      if (type === 'success') status.style.color = '#10B981';
+      else if (type === 'error') status.style.color = '#EF4444';
+      else status.style.color = '';
+    }
+
+    function startOTPCooldown(seconds = 45) {
+      const timerEl = document.getElementById('otp-timer');
+      const sendBtn = document.getElementById('send-otp-btn');
+
+      if (otpCooldownInterval) clearInterval(otpCooldownInterval);
+
+      let remaining = seconds;
+      timerEl.classList.remove('hidden');
+      sendBtn.disabled = true;
+      timerEl.textContent = `Resend OTP in ${remaining}s`;
+
+      otpCooldownInterval = setInterval(() => {
+        remaining -= 1;
+        if (remaining <= 0) {
+          clearInterval(otpCooldownInterval);
+          otpCooldownInterval = null;
+          timerEl.classList.add('hidden');
+          timerEl.textContent = '';
+          sendBtn.disabled = false;
+          return;
+        }
+        timerEl.textContent = `Resend OTP in ${remaining}s`;
+      }, 1000);
+    }
+
+    async function sendOTP(fromRegisterAttempt = false) {
+      const emailInput = document.getElementById('email');
+      const email = emailInput.value.trim().toLowerCase();
+
+      if (!email) {
+        if (!fromRegisterAttempt) showToast('Error', 'Please enter email first.', 'error');
+        return false;
+      }
+
+      const sendBtn = document.getElementById('send-otp-btn');
+      sendBtn.disabled = true;
+
+      try {
+        const response = await fetch(OTP_SEND_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          if (!fromRegisterAttempt) {
+            showToast('OTP Failed', data.detail || 'Could not send OTP.', 'error');
+          } else {
+            showToast('OTP Failed', data.detail || 'Could not send OTP for verification.', 'error');
+          }
+          sendBtn.disabled = false;
+          return false;
+        }
+
+        otpVerified = false;
+        verifiedEmail = '';
+        document.getElementById('otp-verification-box').classList.remove('hidden');
+        updateOTPStatus('OTP sent to your email. Please enter it below.');
+        if (!fromRegisterAttempt) {
+          showToast('OTP Sent', 'Check your email inbox for the code.', 'success');
+        }
+        startOTPCooldown(45);
+        return true;
+      } catch (error) {
+        showToast('Network Error', 'Could not send OTP. Ensure backend is running.', 'error');
+        sendBtn.disabled = false;
+        return false;
+      }
+    }
+
+    async function verifyOTP() {
+      const email = document.getElementById('email').value.trim().toLowerCase();
+      const otp = document.getElementById('otp-code').value.trim();
+
+      if (!email) {
+        showToast('Error', 'Please enter email first.', 'error');
+        return;
+      }
+
+      if (!/^\d{6}$/.test(otp)) {
+        updateOTPStatus('Please enter a valid 6-digit OTP.', 'error');
+        return;
+      }
+
+      const verifyBtn = document.getElementById('verify-otp-btn');
+      verifyBtn.disabled = true;
+
+      try {
+        const response = await fetch(OTP_VERIFY_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, otp })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          updateOTPStatus(data.detail || 'OTP verification failed.', 'error');
+          verifyBtn.disabled = false;
+          return;
+        }
+
+        otpVerified = true;
+        verifiedEmail = email;
+        document.getElementById('otp-code').disabled = true;
+        verifyBtn.disabled = true;
+        updateOTPStatus('✓ Email verified successfully.', 'success');
+        showToast('Verified', 'Email verification completed.', 'success');
+      } catch (error) {
+        updateOTPStatus('Could not verify OTP due to network issue.', 'error');
+        verifyBtn.disabled = false;
+      }
+    }
+
+    document.getElementById('email').addEventListener('input', () => {
+      resetOTPState();
+    });
+
+    function showTerms() {
+      window.location.href = 'index.html#policies';
+    }
+
+    function showPrivacy() {
+      window.location.href = 'index.html#policies';
+    }
 
     async function handleRegister(e) {
       e.preventDefault();
@@ -303,6 +471,7 @@
       // 1. Gather Data
       const password = document.getElementById('password').value;
       const confirmPassword = document.getElementById('confirm-password').value;
+      const email = document.getElementById('email').value.trim().toLowerCase();
 
       if (password !== confirmPassword) {
         showToast('Error', 'Passwords do not match.', 'error');
@@ -310,10 +479,19 @@
         return false;
       }
 
+      if (!otpVerified || verifiedEmail !== email) {
+        const otpSent = await sendOTP(true);
+        if (otpSent) {
+          showToast('Email Verification Required', 'OTP sent to your email. Verify it, then submit again.', 'warning');
+        }
+        resetBtn();
+        return false;
+      }
+
       // Prepare payload for Django
       const userData = {
-        username: document.getElementById('email').value, // Use email as username
-        email: document.getElementById('email').value,
+        username: email, // Use email as username
+        email: email,
         first_name: document.getElementById('first-name').value,
         last_name: document.getElementById('last-name').value,
         password: password,
@@ -331,27 +509,27 @@
       try {
         // 2. Send to Backend
         const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(userData)
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(userData)
         });
 
         const data = await response.json();
 
         if (response.ok) {
-            // Success!
-            showToast('Success', 'Account created! Redirecting to login...', 'success');
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 2000);
+          // Success!
+          showToast('Success', 'Account created! Redirecting to login...', 'success');
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 2000);
         } else {
-            // Handle specific Django errors
-            let msg = 'Registration failed.';
-            if (data.username) msg = 'User with this email already exists.';
-            else if (data.email) msg = 'Email address already in use.';
-            else if (data.password) msg = 'Password is too weak or common.';
-            showToast('Registration Failed', msg, 'error');
-            resetBtn();
+          // Handle specific Django errors
+          let msg = 'Registration failed.';
+          if (data.username) msg = 'User with this email already exists.';
+          else if (data.email) msg = 'Email address already in use.';
+          else if (data.password) msg = 'Password is too weak or common.';
+          showToast('Registration Failed', msg, 'error');
+          resetBtn();
         }
 
       } catch (error) {

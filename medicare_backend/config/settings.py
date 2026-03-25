@@ -6,6 +6,31 @@ from datetime import timedelta
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load .env file if present
+ENV_FILE = BASE_DIR / '.env'
+if ENV_FILE.exists():
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(ENV_FILE, override=True)
+    except Exception:
+        with open(ENV_FILE, 'r', encoding='utf-8') as env_file:
+            for raw_line in env_file:
+                line = raw_line.strip()
+                if not line or line.startswith('#') or '=' not in line:
+                    continue
+                key, value = line.split('=', 1)
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                if key not in os.environ or not os.environ.get(key):
+                    os.environ[key] = value
+
+
+def env_bool(name, default=False):
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {'1', 'true', 'yes', 'on'}
+
 # Security
 SECRET_KEY = 'medicare-secret-key-1234567890-change-in-production'
 DEBUG = True
@@ -86,7 +111,7 @@ CORS_ALLOW_CREDENTIALS = True
 # REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'accounts.authentication.CookieJWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
@@ -98,7 +123,18 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_COOKIE_ACCESS': os.getenv('JWT_AUTH_COOKIE_ACCESS', 'medicare_access'),
+    'AUTH_COOKIE_REFRESH': os.getenv('JWT_AUTH_COOKIE_REFRESH', 'medicare_refresh'),
+    'AUTH_COOKIE_SECURE': env_bool('JWT_AUTH_COOKIE_SECURE', not DEBUG),
+    'AUTH_COOKIE_HTTP_ONLY': True,
+    'AUTH_COOKIE_SAMESITE': os.getenv('JWT_AUTH_COOKIE_SAMESITE', 'Lax'),
+    'AUTH_COOKIE_PATH': '/',
 }
+
+# Session behavior (admin/web login)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_AGE = 1800
 
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
@@ -122,3 +158,23 @@ STATIC_URL = 'static/'
 
 # Default primary key field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# --- MEDIA FILES (User Uploads) ---
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+# --- EMAIL / OTP CONFIG ---
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com').strip()
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = env_bool('EMAIL_USE_TLS', True)
+EMAIL_USE_SSL = env_bool('EMAIL_USE_SSL', False)
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '').strip()
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '').strip()
+EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', '20'))
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'no-reply@medicare.local')
+FRONTEND_RESET_PASSWORD_URL = os.getenv(
+    'FRONTEND_RESET_PASSWORD_URL',
+    'http://127.0.0.1:5500/templates/reset-password.html'
+)

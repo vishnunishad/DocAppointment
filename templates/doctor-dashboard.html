@@ -8,8 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-   <style>
-        /* --- 1. THEME VARIABLES --- */
+    <style>
+        /* --- 1. CSS VARIABLES & THEME --- */
         :root {
             --primary: #4F46E5;
             --primary-dark: #4338ca;
@@ -20,9 +20,20 @@
             --text-secondary: #6b7280;
             --border: #e5e7eb;
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --danger: #ef4444;
+            
+            /* Status Colors */
             --success: #10b981;
+            --success-light: #d1fae5;
             --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --info: #3b82f6;
+            --info-light: #dbeafe;
+            
+            /* Expired Status Color */
+            --expired-bg: #E5E7EB;
+            --expired-text: #6B7280;
         }
 
         [data-theme="dark"] {
@@ -31,88 +42,106 @@
             --text-primary: #f9fafb;
             --text-secondary: #d1d5db;
             --border: #374151;
+            --success-light: rgba(16, 185, 129, 0.2);
+            --warning-light: rgba(245, 158, 11, 0.2);
+            --danger-light: rgba(239, 68, 68, 0.2);
+            --info-light: rgba(59, 130, 246, 0.2);
+            --expired-bg: #374151;
+            --expired-text: #9CA3AF;
         }
 
-        /* --- 2. GLOBAL RESET --- */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; transition: all 0.3s ease; }
         body { background-color: var(--background); color: var(--text-primary); }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 
-        /* --- 3. HEADER --- */
+        /* --- HEADER --- */
         .header { background: var(--surface); padding: 1rem 0; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 100; }
         .header-inner { display: flex; justify-content: space-between; align-items: center; }
-        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .logo i { background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.6rem; }
+        .header-controls { display: flex; align-items: center; gap: 15px; }
+
+        .btn { padding: 0.5rem 1.5rem; border-radius: 8px; font-weight: 500; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 8px; font-size: 0.95rem; }
+        .btn-danger { background: var(--danger-light); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .btn-danger:hover { background: var(--danger); color: white; }
+        .theme-toggle { background: var(--surface); border: 1px solid var(--border); color: var(--text-primary); font-size: 1.2rem; cursor: pointer; padding: 0.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+        /* --- DASHBOARD --- */
+        .dashboard-header { display: flex; justify-content: space-between; align-items: flex-end; margin: 40px 0 30px; padding-bottom: 20px; border-bottom: 2px solid var(--border); }
+        .dashboard-title h1 { font-size: 2rem; margin-bottom: 8px; color: var(--text-primary); }
+        .dashboard-title p { color: var(--text-secondary); font-size: 1rem; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-bottom: 40px; }
+        .stat-card { background: var(--surface); padding: 25px; border-radius: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); display: flex; align-items: center; gap: 20px; cursor: pointer; transition: all 0.3s ease; }
+        .stat-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .stat-card.active-filter { border: 2px solid var(--primary); background: rgba(79, 70, 229, 0.05); transform: translateY(-5px); }
+        .stat-icon { width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
+        .stat-info h3 { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 500; text-transform: uppercase; }
+        .stat-info strong { font-size: 1.8rem; color: var(--text-primary); font-weight: 700; }
+
+        .profile-card { background: var(--surface); padding: 20px; border-radius: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); display: flex; align-items: center; gap: 15px; cursor: pointer; transition: all 0.3s ease; }
+        .profile-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+
+        /* --- TABLE --- */
+        .table-container { background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; margin-bottom: 50px; -webkit-overflow-scrolling: touch; }
+        .table-container::-webkit-scrollbar { display: none; }
         
-        /* Buttons */
-        .btn { padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; border: none; font-size: 0.9rem; font-weight: 500; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
-        .btn-outline:hover { border-color: var(--danger); color: var(--danger); }
-        .theme-toggle { background: none; border: none; font-size: 1.2rem; color: var(--text-primary); cursor: pointer; padding: 5px; }
-
-        /* --- 4. DASHBOARD GRID --- */
-        .dashboard-header { margin: 40px 0 30px; display: flex; justify-content: space-between; align-items: end; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
-        .dashboard-title h1 { font-size: 1.8rem; margin-bottom: 5px; }
-        .dashboard-title p { color: var(--text-secondary); }
-
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 40px; }
-        .stat-card { background: var(--surface); padding: 25px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border); display: flex; align-items: center; gap: 20px; }
-        .stat-icon { width: 50px; height: 50px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
-        .stat-info h3 { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 500; }
-        .stat-info strong { font-size: 1.5rem; color: var(--text-primary); }
-
-        /* --- 5. TABLE STYLES --- */
-        .table-container { background: var(--surface); border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden; }
-        .table-header { padding: 20px; font-weight: 700; font-size: 1.1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .table-header { padding: 20px 25px; font-weight: 700; font-size: 1.1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; min-width: 600px; }
         
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 15px 20px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
-        th { background: var(--background); color: var(--text-secondary); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .filter-controls { display: flex; gap: 10px; }
+        .filter-btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--background); color: var(--text-secondary); cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; }
+        .filter-btn:hover { background: var(--surface); border-color: var(--text-secondary); color: var(--text-primary); }
+        .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th, td { padding: 18px 25px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+        th { background: var(--background); color: var(--text-secondary); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; }
         tr:last-child td { border-bottom: none; }
-        tr:hover { background-color: rgba(79, 70, 229, 0.02); }
+        tr:hover { background-color: rgba(79, 70, 229, 0.03); }
 
-        .patient-cell { display: flex; align-items: center; gap: 12px; }
-        .avatar-small { width: 36px; height: 36px; background: #e0e7ff; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.9rem; }
-        
-        /* Action Buttons */
-        .action-btn { padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 500; display: inline-flex; align-items: center; gap: 5px; margin-right: 5px; transition: 0.2s; }
-        .btn-view { background: #eff6ff; color: var(--primary); border: 1px solid #dbeafe; }
-        .btn-view:hover { background: var(--primary); color: white; border-color: var(--primary); }
-        
-        .btn-accept { background: #ecfdf5; color: var(--success); border: 1px solid #d1fae5; }
-        .btn-accept:hover { background: var(--success); color: white; border-color: var(--success); }
-        
-        .btn-reject { background: #fef2f2; color: var(--danger); border: 1px solid #fee2e2; }
-        .btn-reject:hover { background: var(--danger); color: white; border-color: var(--danger); }
+        .patient-cell { display: flex; align-items: center; gap: 15px; }
+        .avatar-small { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; border: 2px solid white; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3); overflow: hidden; }
+        .avatar-small img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* --- 6. MODAL STYLES --- */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); }
-        .modal-content { background: var(--surface); width: 90%; max-width: 550px; border-radius: 16px; overflow: hidden; animation: slideUp 0.3s ease; border: 1px solid var(--border); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-        
-        .modal-header { padding: 20px 25px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h3 { font-size: 1.1rem; margin: 0; display: flex; align-items: center; gap: 10px; }
-        .modal-body { padding: 25px; }
-        
-        .profile-hero { display: flex; align-items: center; gap: 15px; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
-        .avatar-large { width: 60px; height: 60px; font-size: 1.5rem; background: #e0e7ff; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
-        
+        .action-btn { padding: 6px 12px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px; transition: all 0.2s; }
+        .action-btn:hover { transform: translateY(-2px); }
+        .btn-view { background: var(--info-light); color: var(--info); border: 1px solid rgba(59, 130, 246, 0.3); }
+        .btn-accept { background: var(--success-light); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .btn-reject { background: var(--danger-light); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        .status-badge { padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+        .status-pending { background: var(--warning-light); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .status-confirmed { background: var(--success-light); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .status-cancelled { background: var(--danger-light); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .status-expired { background: var(--expired-bg); color: var(--expired-text); border: 1px solid var(--border); }
+
+        /* --- MODAL --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.6); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(5px); animation: fadeIn 0.3s ease; }
+        .modal-content { background: var(--surface); color: var(--text-primary); padding: 2rem; border-radius: 16px; width: 90%; max-width: 550px; position: relative; animation: modalSlide 0.3s ease; border: 1px solid var(--border); }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); background: none; border: none; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .close-btn:hover { color: var(--danger); background: var(--danger-light); transform: rotate(90deg); }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes modalSlide { from { transform: translateY(-20px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+
+        .profile-hero { display: flex; align-items: center; gap: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+        .avatar-large { width: 70px; height: 70px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 700; border: 3px solid white; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); overflow: hidden; }
+        .avatar-large img { width: 100%; height: 100%; object-fit: cover; }
+
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-        .info-item label { display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; font-weight: 600; }
-        .info-item div { font-weight: 500; font-size: 1rem; color: var(--text-primary); }
+        .info-item { padding: 12px; border-radius: 8px; background: var(--background); border: 1px solid var(--border); }
+        .info-item label { display: block; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 5px; }
+        .alert-box { padding: 12px 16px; border-radius: 8px; font-size: 0.9rem; margin-top: 5px; display: flex; align-items: center; gap: 12px; }
+        .alert-danger { background: var(--danger-light); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .alert-safe { background: var(--success-light); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .medical-notes { background: var(--background); padding: 15px; border-radius: 8px; font-size: 0.9rem; line-height: 1.5; border: 1px solid var(--border); margin-bottom: 20px; }
 
-        /* FIXED: Alert Box Styling for Light/Dark Modes */
-        .alert-box { padding: 12px; border-radius: 8px; font-size: 0.9rem; margin-top: 5px; display: flex; align-items: start; gap: 10px; }
-        
-        /* Light Mode Colors */
-        .alert-danger { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
-        .alert-safe { background: #ecfdf5; color: #065f46; border: 1px solid #d1fae5; }
-
-        /* Dark Mode Colors (Inverted for readability) */
-        [data-theme="dark"] .alert-danger { background: rgba(127, 29, 29, 0.2); color: #fca5a5; border-color: rgba(127, 29, 29, 0.5); }
-        [data-theme="dark"] .alert-safe { background: rgba(6, 78, 59, 0.2); color: #6ee7b7; border-color: rgba(6, 78, 59, 0.5); }
-
-        .medical-notes { background: var(--background); padding: 15px; border-radius: 8px; font-size: 0.95rem; line-height: 1.5; color: var(--text-primary); border: 1px solid var(--border); }
-
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @media (max-width: 768px) {
+            .dashboard-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .info-grid { grid-template-columns: 1fr; }
+            .table-header { flex-direction: column; align-items: flex-start; }
+            .filter-controls { width: 100%; overflow-x: auto; padding-bottom: 5px; }
+        }
     </style>
 </head>
 <body>
@@ -121,9 +150,9 @@
         <div class="container">
             <div class="header-inner">
                 <a href="index.html" class="logo"><i class="fas fa-heart-pulse"></i> MediCare</a>
-                <div style="display: flex; gap: 15px; align-items: center;">
+                <div class="header-controls">
                     <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
-                    <button onclick="logout()" class="btn btn-outline"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    <button onclick="logout()" class="btn btn-danger"><i class="fas fa-sign-out-alt"></i> Logout</button>
                 </div>
             </div>
         </div>
@@ -135,302 +164,306 @@
                 <h1>Doctor Dashboard</h1>
                 <p>Manage appointments and review patient profiles</p>
             </div>
-            <div class="stat-card" style="padding: 10px 20px; height: auto;">
-                <div class="stat-icon" style="width: 40px; height: 40px; font-size: 1.2rem; background: #e0e7ff; color: var(--primary);">
-                    <i class="fas fa-user-md"></i>
-                </div>
+            
+            <div class="profile-card" onclick="goToProfile()">
+                <div class="stat-icon" style="background: var(--info-light); color: var(--info);"><i class="fas fa-user-md"></i></div>
                 <div>
-                    <div style="font-size: 0.75rem; color: var(--text-secondary);">Logged in as</div>
-                    <strong id="doc-name" style="font-size: 1rem;">Dr. ...</strong>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Logged in as</div>
+                    <strong id="doc-name" style="font-size: 1.1rem;">Dr. ...</strong>
                 </div>
+                <i class="fas fa-chevron-right" style="color: var(--text-secondary); margin-left: 10px;"></i>
             </div>
         </div>
 
         <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon" style="background: #d1fae5; color: var(--success);"><i class="fas fa-calendar-check"></i></div>
+            <div class="stat-card" id="card-today" onclick="filterAppointments('today')">
+                <div class="stat-icon" style="background: var(--success-light); color: var(--success);"><i class="fas fa-calendar-check"></i></div>
                 <div class="stat-info"><h3>Today's Appointments</h3><strong id="today-count">0</strong></div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon" style="background: #fef3c7; color: var(--warning);"><i class="fas fa-clock"></i></div>
+            <div class="stat-card" id="card-pending" onclick="filterAppointments('pending')">
+                <div class="stat-icon" style="background: var(--warning-light); color: var(--warning);"><i class="fas fa-clock"></i></div>
                 <div class="stat-info"><h3>Pending Requests</h3><strong id="pending-count">0</strong></div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon" style="background: #e0e7ff; color: var(--primary);"><i class="fas fa-users"></i></div>
-                <div class="stat-info"><h3>Total Patients</h3><strong id="total-patients">0</strong></div>
+            <div class="stat-card active-filter" id="card-all" onclick="filterAppointments('all')">
+                <div class="stat-icon" style="background: var(--info-light); color: var(--info);"><i class="fas fa-users"></i></div>
+                <div class="stat-info"><h3>My Patients (Total)</h3><strong id="total-patients">0</strong></div>
             </div>
         </div>
 
         <div class="table-container">
             <div class="table-header">
-                <span>Recent Requests</span>
-                <button class="btn btn-outline" style="font-size: 0.8rem;"><i class="fas fa-filter"></i> Filter</button>
+                <span id="list-title">All Appointment Requests</span>
+                <div class="filter-controls">
+                    <button class="filter-btn active" onclick="filterAppointments('all')">All</button>
+                    <button class="filter-btn" onclick="filterAppointments('pending')">Pending</button>
+                    <button class="filter-btn" onclick="filterAppointments('confirmed')">Confirmed</button>
+                    <button class="filter-btn" onclick="filterAppointments('cancelled')">Cancelled</button>
+                </div>
             </div>
             <table id="app-table">
-                <thead>
-                    <tr>
-                        <th>Patient Name</th>
-                        <th>Schedule</th>
-                        <th>Problem / Notes</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="table-body">
-                    <tr><td colspan="5" style="text-align:center; padding:40px; color: var(--text-secondary);">
-                        <i class="fas fa-spinner fa-spin"></i> Loading data...
-                    </td></tr>
-                </tbody>
+                <thead><tr><th>Patient Name</th><th>Schedule</th><th>Problem / Notes</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="table-body"><tr><td colspan="5" style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading data...</td></tr></tbody>
             </table>
         </div>
     </div>
 
     <div class="modal-overlay" id="patient-modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-file-medical-alt"></i> Patient Medical Profile</h3>
-                <button onclick="closeModal()" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer; opacity:0.8;">&times;</button>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <div style="margin-bottom: 1.5rem;">
+                <h2 style="font-size: 1.5rem; margin-bottom: 5px; color: var(--primary);"><i class="fas fa-file-medical-alt"></i> Patient Medical Profile</h2>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Review patient medical information</p>
             </div>
-            <div class="modal-body">
-                <div class="profile-hero">
-                    <div class="avatar-large" id="m-avatar">U</div>
-                    <div>
-                        <h2 id="m-name" style="font-size: 1.25rem; margin-bottom: 2px;">Unknown</h2>
-                        <span id="m-email" style="color:var(--text-secondary); font-size: 0.9rem;">email@example.com</span>
-                    </div>
-                </div>
-
-                <div class="info-grid">
-                    <div class="info-item">
-                        <label>Date of Birth</label>
-                        <div id="m-dob">--</div>
-                    </div>
-                    <div class="info-item">
-                        <label>Blood Group</label>
-                        <div id="m-blood" style="color:var(--primary);">--</div>
-                    </div>
-                    <div class="info-item" style="grid-column: 1 / -1;">
-                        <label>Address</label>
-                        <div id="m-address">--</div>
-                    </div>
-                </div>
-
-                <div class="info-item" style="margin-bottom: 20px;">
-                    <label>Allergies & Alerts</label>
-                    <div id="m-allergies" class="alert-box alert-safe">
-                        <i class="fas fa-check-circle"></i> No known allergies listed.
-                    </div>
-                </div>
-
-                <div class="info-item">
-                    <label>Medical History</label>
-                    <div id="m-history" class="medical-notes">
-                        No medical history provided.
-                    </div>
-                </div>
-
-                <div style="margin-top:25px; text-align:right;">
-                    <button onclick="closeModal()" class="btn btn-outline" style="padding: 8px 20px;">Close Profile</button>
-                </div>
+            <div class="profile-hero">
+                <div class="avatar-large" id="m-avatar">U</div>
+                <div><h2 id="m-name" style="font-size: 1.25rem;">Unknown</h2><span id="m-email" style="color: var(--text-secondary); font-size: 0.9rem;">email@example.com</span></div>
             </div>
+            <div class="info-grid">
+                <div class="info-item"><label><i class="fas fa-birthday-cake"></i> Date of Birth</label><div id="m-dob">--</div></div>
+                <div class="info-item"><label><i class="fas fa-tint"></i> Blood Group</label><div id="m-blood" style="color: var(--primary);">--</div></div>
+                <div class="info-item" style="grid-column: 1 / -1;"><label><i class="fas fa-map-marker-alt"></i> Address</label><div id="m-address">--</div></div>
+            </div>
+            <div class="info-item" style="margin-bottom: 20px;">
+                <label><i class="fas fa-exclamation-triangle"></i> Allergies & Alerts</label>
+                <div id="m-allergies" class="alert-box alert-safe"><i class="fas fa-check-circle"></i> No known allergies listed.</div>
+            </div>
+            <div class="info-item"><label><i class="fas fa-history"></i> Medical History</label><div id="m-history" class="medical-notes">No medical history provided.</div></div>
+            <div style="margin-top:25px; text-align:right;"><button onclick="closeModal()" class="btn btn-outline"><i class="fas fa-times"></i> Close Profile</button></div>
         </div>
     </div>
 
+    <script src="/static/js/app-config.js"></script>
+    <script src="/static/js/auth-utils.js"></script>
     <script>
-        const API_APPS = 'http://127.0.0.1:8000/api/appointments/';
+        const API_APPS = `${window.APP_CONFIG.API_BASE_URL}/api/appointments/`;
         let allAppointments = [];
 
-        // --- THEME LOGIC ---
         const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = themeToggle.querySelector('i');
-        const savedTheme = localStorage.getItem('theme') || 'light';
         function setTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('theme', theme);
-            themeIcon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            themeToggle.querySelector('i').className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
         }
-        setTheme(savedTheme);
-        themeToggle.addEventListener('click', () => {
-            const current = document.documentElement.getAttribute('data-theme');
-            setTheme(current === 'dark' ? 'light' : 'dark');
-        });
+        setTheme(localStorage.getItem('theme') || 'light');
+        themeToggle.addEventListener('click', () => setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
 
-        // --- LOAD DATA ---
-        document.addEventListener('DOMContentLoaded', async () => {
-            const token = localStorage.getItem('access_token');
-            const user = JSON.parse(localStorage.getItem('user'));
-            
-            if(!token || user.role !== 'doctor') {
-                window.location.href = 'login.html';
-                return;
+        async function logout() { 
+            try {
+                await fetch(`${window.APP_CONFIG.API_BASE_URL}/api/auth/logout/`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+            } catch (e) {
+                console.warn('Logout request failed:', e);
             }
+            sessionStorage.removeItem('user');
+            window.location.href = 'index.html'; 
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            let user;
+            try {
+                user = JSON.parse(sessionStorage.getItem('user') || '{}');
+            } catch {
+                user = {};
+            }
+            if(user.role !== 'doctor') { window.location.href = 'login.html'; return; }
             document.getElementById('doc-name').textContent = `Dr. ${user.first_name} ${user.last_name}`;
 
             try {
-                const res = await fetch(API_APPS, { headers: { 'Authorization': `Bearer ${token}` } });
-                const data = await res.json();
-                allAppointments = data;
-                renderTable(data);
-                updateStats(data);
-            } catch (err) { 
-                console.error(err);
-                document.getElementById('table-body').innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Error loading data. Is server running?</td></tr>`;
-            }
-        });
-
-        function renderTable(data) {
-            const tbody = document.getElementById('table-body');
-            tbody.innerHTML = '';
-            
-            if(data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px;">No appointments found.</td></tr>`;
-                return;
-            }
-
-            data.forEach(app => {
-                const p = app.patient_details || {};
-                const name = `${p.first_name} ${p.last_name}`;
+                const res = await authApiFetch(API_APPS);
+                if (!res.ok) throw new Error("Failed");
+                allAppointments = await res.json();
                 
-                // Status Badges
-                let statusBadge = `<span style="color:#d97706; background:#fef3c7; padding:4px 10px; border-radius:12px; font-size:0.8rem; font-weight:600;">Pending</span>`;
-                if(app.status === 'confirmed') statusBadge = `<span style="color:#059669; background:#d1fae5; padding:4px 10px; border-radius:12px; font-size:0.8rem; font-weight:600;">Confirmed</span>`;
-                if(app.status === 'cancelled') statusBadge = `<span style="color:#dc2626; background:#fee2e2; padding:4px 10px; border-radius:12px; font-size:0.8rem; font-weight:600;">Cancelled</span>`;
-
-                const row = `
-                    <tr>
-                        <td>
-                            <div class="patient-cell">
-                                <div class="avatar-small">${name[0]}</div>
-                                <div>
-                                    <div style="font-weight:600;">${name}</div>
-                                    <div style="font-size:0.8rem; color:var(--text-secondary);">${p.email}</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div style="font-weight:500;">${app.date}</div>
-                            <div style="font-size:0.85rem; color:var(--primary); font-weight:600;">${app.time}</div>
-                        </td>
-                        <td style="color:var(--text-secondary); max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                            ${app.notes || 'No notes provided'}
-                        </td>
-                        <td>${statusBadge}</td>
-                        <td>
-                            <button onclick="viewPatient(${app.id})" class="action-btn btn-view" title="View Profile"><i class="fas fa-file-medical"></i> Profile</button>
-                            ${app.status === 'pending' ? `
-                               <button onclick="updateStatus(${app.id}, 'confirmed')" class="action-btn btn-accept" title="Accept"><i class="fas fa-check"></i></button>
-                               <button onclick="updateStatus(${app.id}, 'cancelled')" class="action-btn btn-reject" title="Reject"><i class="fas fa-times"></i></button>
-                            ` : ''}
-                        </td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
-            });
-        }
+                filterAppointments('all');
+                updateStats(allAppointments);
+            } catch (err) { document.getElementById('table-body').innerHTML = `<tr><td colspan="5" style="text-align:center; padding:40px;">Unable to load data.</td></tr>`; }
+        });
 
         function updateStats(data) {
             const today = new Date().toISOString().split('T')[0];
-            const todayCount = data.filter(a => a.date === today).length;
-            const pendingCount = data.filter(a => a.status === 'pending').length;
-            
-            // --- NEW LOGIC: Calculate Unique Patients ---
-            const uniquePatients = new Set();
-            data.forEach(app => {
-                if(app.patient_details && app.patient_details.id) {
-                    uniquePatients.add(app.patient_details.id);
-                }
-            });
+            const now = new Date();
 
+            const todayCount = data.filter(a => a.date === today).length;
+            
+            // Only count ACTIVE (future) pending appointments
+            const pendingCount = data.filter(a => {
+                if(a.status !== 'pending') return false;
+                const appDate = new Date(`${a.date}T${a.time}`);
+                return appDate >= now;
+            }).length;
+            
+            const uniquePatients = new Set(data.map(a => a.patient_details?.id).filter(Boolean));
             document.getElementById('today-count').textContent = todayCount;
             document.getElementById('pending-count').textContent = pendingCount;
             document.getElementById('total-patients').textContent = uniquePatients.size;
         }
 
-        // --- MODAL LOGIC (VIEW PATIENT) ---
+        function filterAppointments(type) {
+            const cards = ['card-today', 'card-pending', 'card-all'];
+            cards.forEach(id => document.getElementById(id).classList.remove('active-filter'));
+            
+            const buttons = document.querySelectorAll('.filter-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            buttons.forEach(btn => {
+                if(btn.textContent.toLowerCase() === type || (type === 'all' && btn.textContent === 'All')) btn.classList.add('active');
+            });
+
+            let filtered = [];
+            const title = document.getElementById('list-title');
+            const now = new Date();
+
+            if (type === 'today') {
+                document.getElementById('card-today').classList.add('active-filter');
+                const today = new Date().toISOString().split('T')[0];
+                filtered = allAppointments.filter(a => a.date === today);
+                title.textContent = "Today's Appointments";
+            } else if (type === 'pending') {
+                document.getElementById('card-pending').classList.add('active-filter');
+                // HIDE EXPIRED FROM PENDING LIST
+                filtered = allAppointments.filter(a => {
+                    const appDate = new Date(`${a.date}T${a.time}`);
+                    return a.status === 'pending' && appDate >= now;
+                });
+                title.textContent = "Pending Requests";
+            } else if (type === 'confirmed') {
+                filtered = allAppointments.filter(a => a.status === 'confirmed');
+                title.textContent = "Confirmed Appointments";
+            } else if (type === 'cancelled') {
+                filtered = allAppointments.filter(a => a.status === 'cancelled');
+                title.textContent = "Cancelled Appointments";
+            } else {
+                document.getElementById('card-all').classList.add('active-filter');
+                filtered = allAppointments;
+                title.textContent = "All Appointments";
+            }
+            renderTable(filtered);
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+            if(data.length === 0) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:40px;">No appointments found.</td></tr>`; return; }
+
+            data.forEach(app => {
+                const p = app.patient_details || {};
+                const name = `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Unknown Patient';
+                const email = p.email || 'No email';
+                
+                let avatarHTML;
+                if (p.profile_image) avatarHTML = `<div class="avatar-small"><img src="${p.profile_image}" alt="${name}"></div>`;
+                else avatarHTML = `<div class="avatar-small">${(p.first_name?.[0] || 'U') + (p.last_name?.[0] || 'P')}</div>`;
+
+                let statusClass = 'status-pending';
+                let statusText = app.status; 
+                if(app.status === 'confirmed') { statusClass = 'status-confirmed'; statusText = 'Confirmed'; }
+                else if(app.status === 'cancelled') { statusClass = 'status-cancelled'; statusText = 'Cancelled'; }
+
+                // Check Expiration
+                const now = new Date();
+                const appDateTime = new Date(`${app.date}T${app.time}`);
+                let isExpired = false;
+                
+                if (app.status === 'pending' && appDateTime < now) {
+                    isExpired = true;
+                    statusClass = 'status-expired';
+                    statusText = 'Expired';
+                }
+
+                statusText = statusText.charAt(0).toUpperCase() + statusText.slice(1);
+                const dateStr = new Date(app.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+                // Allow delete if Expired OR Cancelled
+                const canDelete = isExpired || app.status === 'cancelled';
+
+                const row = `<tr>
+                        <td><div class="patient-cell">${avatarHTML}<div><div style="font-weight: 600;">${name}</div><div style="font-size: 0.85rem; color: var(--text-secondary);">${email}</div></div></div></td>
+                        <td><div style="font-weight: 600;">${dateStr}</div><div style="font-size: 0.9rem; color: var(--primary);"><i class="far fa-clock"></i> ${app.time}</div></td>
+                        <td style="color: var(--text-secondary); max-width: 250px;"><div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${app.notes || 'No notes'}</div></td>
+                        <td><div class="status-badge ${statusClass}">${statusText}</div></td>
+                        <td>
+                            <button onclick="viewPatient(${app.id})" class="action-btn btn-view"><i class="fas fa-file-medical"></i> Profile</button>
+                            ${app.status === 'pending' && !isExpired ? 
+                                `<button onclick="updateStatus(${app.id}, 'confirmed')" class="action-btn btn-accept"><i class="fas fa-check"></i></button>
+                                 <button onclick="updateStatus(${app.id}, 'cancelled')" class="action-btn btn-reject"><i class="fas fa-times"></i></button>` 
+                            : ''}
+                            ${canDelete ? `<button onclick="deleteAppointment(${app.id})" class="action-btn btn-reject" title="Delete Permanently"><i class="fas fa-trash"></i></button>` : ''}
+                        </td>
+                    </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        async function deleteAppointment(appId) {
+            if(!confirm("Are you sure you want to permanently delete this appointment?")) return;
+
+            const btn = event.currentTarget;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+            btn.disabled = true;
+
+            try {
+                const res = await authApiFetch(`${API_APPS}${appId}/`, {
+                    method: 'DELETE',
+                });
+
+                if (res.ok) {
+                    const data = await (await authApiFetch(API_APPS)).json();
+                    allAppointments = data;
+                    const activeBtn = document.querySelector('.filter-btn.active');
+                    filterAppointments(activeBtn ? activeBtn.textContent.toLowerCase() : 'all');
+                    updateStats(data);
+                } else alert("Failed to delete appointment.");
+            } catch (err) { alert("Network error."); } finally { if(btn) btn.disabled = false; }
+        }
+
         function viewPatient(appId) {
             const app = allAppointments.find(a => a.id === appId);
             if(!app || !app.patient_details) return;
-
             const p = app.patient_details;
-            const profile = p.profile || {}; // Safe access
+            const profile = p.profile || {};
 
-            // Fill Data
+            const modalAvatar = document.getElementById('m-avatar');
+            if(p.profile_image) modalAvatar.innerHTML = `<img src="${p.profile_image}" alt="${p.first_name}">`;
+            else modalAvatar.textContent = (p.first_name?.[0] || 'U') + (p.last_name?.[0] || 'P');
+
             document.getElementById('m-name').textContent = `${p.first_name} ${p.last_name}`;
             document.getElementById('m-email').textContent = p.email;
-            document.getElementById('m-avatar').textContent = (p.first_name[0] || 'U').toUpperCase();
-            
             document.getElementById('m-dob').textContent = profile.date_of_birth || 'Not provided';
             document.getElementById('m-blood').textContent = profile.blood_group || '--';
             document.getElementById('m-address').textContent = profile.address || 'Not provided';
             
             const allergyBox = document.getElementById('m-allergies');
-            if(profile.allergies) {
-                allergyBox.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${profile.allergies}`;
-                allergyBox.className = 'alert-box alert-danger';
-            } else {
-                allergyBox.innerHTML = `<i class="fas fa-check-circle"></i> No known allergies listed.`;
-                allergyBox.className = 'alert-box alert-safe';
-            }
-
+            if(profile.allergies) { allergyBox.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${profile.allergies}`; allergyBox.className = 'alert-box alert-danger'; }
+            else { allergyBox.innerHTML = `<i class="fas fa-check-circle"></i> No known allergies listed.`; allergyBox.className = 'alert-box alert-safe'; }
             document.getElementById('m-history').textContent = profile.medical_history || 'No medical history provided.';
-
-            // Show Modal
             document.getElementById('patient-modal').style.display = 'flex';
         }
 
-        function closeModal() {
-            document.getElementById('patient-modal').style.display = 'none';
-        }
+        function closeModal() { document.getElementById('patient-modal').style.display = 'none'; }
+        window.onclick = function(e) { if (e.target.classList.contains('modal-overlay')) closeModal(); }
 
-        // Close modal if clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('patient-modal');
-            if (event.target == modal) {
-                closeModal();
-            }
-        }
-        // --- UPDATE APPOINTMENT STATUS ---
         async function updateStatus(appId, newStatus) {
-            const btn = event.currentTarget; // The button clicked
-            const originalHTML = btn.innerHTML;
-            
-            // Show loading animation on button
+            const btn = event.currentTarget;
             btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
             btn.disabled = true;
-
-            const token = localStorage.getItem('access_token');
-
             try {
-                const res = await fetch(`${API_APPS}${appId}/`, {
+                const res = await authApiFetch(`${API_APPS}${appId}/`, {
                     method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ status: newStatus })
                 });
-
                 if (res.ok) {
-                    // Reload data to show new status
-                    const data = await (await fetch(API_APPS, { headers: { 'Authorization': `Bearer ${token}` } })).json();
+                    const data = await (await authApiFetch(API_APPS)).json();
                     allAppointments = data;
-                    renderTable(data);
+                    const activeBtn = document.querySelector('.filter-btn.active');
+                    filterAppointments(activeBtn ? activeBtn.textContent.toLowerCase() : 'all');
                     updateStats(data);
-                } else {
-                    alert("Failed to update status.");
-                }
-            } catch (err) {
-                console.error(err);
-                alert("Network error.");
-            } finally {
-                btn.innerHTML = originalHTML;
-                btn.disabled = false;
-            }
+                } else alert("Failed to update status.");
+            } catch (err) { alert("Network error."); } finally { btn.disabled = false; }
         }
-        function logout() {
-            localStorage.clear();
-            window.location.href = 'index.html';
-        }
+
+        function goToProfile() { window.location.href = 'doctor-profile.html'; }
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
     </script>
 </body>
 </html>
