@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="DocAppointment Landing Page Placeholder">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b3c5d"/>
+      <stop offset="100%" stop-color="#328cc1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <rect x="70" y="70" width="1140" height="580" rx="20" fill="#ffffff" opacity="0.92"/>
+  <text x="640" y="300" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="54" fill="#0b3c5d">DocAppointment</text>
+  <text x="640" y="360" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="30" fill="#1d2731">Landing Page Screenshot Placeholder</text>
+  <text x="640" y="420" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="22" fill="#1d2731">Replace with your actual homepage image</text>
+</svg>
